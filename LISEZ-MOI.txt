@@ -1,0 +1,13 @@
+MON JOURNAL SANTÉ VOCAL — PROTOTYPE V1
+
+Contenu :
+- index.html : application web
+- manifest.json : métadonnées pour ajout à l'écran d'accueil
+- sw.js : cache de base pour usage hors ligne après premier chargement
+
+Important :
+Ce prototype enregistre les données dans le stockage local du navigateur, sans compte ni synchronisation. Ce n'est pas un service médical sécurisé. La dictée du navigateur peut transmettre l'audio à un service externe selon l'appareil et les réglages. Ne saisissez pas d'informations que vous ne souhaitez pas transmettre. Exportez régulièrement les données via Tendances > Exporter.
+
+Pour tester la dictée et l'installation PWA, il faut héberger les fichiers sur une adresse HTTPS. Ouvrir simplement index.html comme fichier local ne suffit pas pour toutes les fonctions. Le navigateur doit prendre en charge SpeechRecognition/webkitSpeechRecognition. En attendant, le clavier vocal Android peut remplir la zone de récit.
+
+Le classement vocal de cette version est volontairement simple (reconnaissance de quelques formulations françaises). Relisez toujours les champs avant de sauvegarder. Il ne fait pas de diagnostic.
