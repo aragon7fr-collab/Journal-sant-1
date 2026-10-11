@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#dff6fb">
+<meta name="description" content="Prototype de journal de santé personnel à commande vocale.">
+<link rel="manifest" href="manifest.json">
+<title>Mon journal santé</title>
+<style>
+:root{--ink:#27345d;--muted:#68769c;--purple:#8c64f5;--pink:#ed79d3;--green:#34b982;--blue:#41b9e9;--coral:#f27b78;--card:rgba(255,255,255,.88)}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:radial-gradient(ellipse at 0% 25%,#fff7bd 0,transparent 35%),radial-gradient(ellipse at 100% 20%,#c6f1ff 0,transparent 45%),linear-gradient(145deg,#e7f8fa,#f3f9e9 52%,#d8f4fb);min-height:100vh;padding:18px 16px 100px}
+.wrap{max-width:720px;margin:auto}
+.top{display:flex;justify-content:space-between;align-items:center;margin:8px 4px 22px}
+.eyebrow{font-size:13px;color:var(--muted)}
+h1{font-size:29px;line-height:1.1;margin:3px 0 0;letter-spacing:-.7px}
+.avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#fff;font-size:24px;box-shadow:0 4px 14px #7c8bb522}
+.hero{border-radius:28px;padding:23px;background:linear-gradient(115deg,#9470fa,#c765e5 55%,#f17fcb);color:white;display:flex;gap:17px;align-items:center;box-shadow:0 10px 28px #b56fe733}
+.mic{flex:none;border:0;border-radius:50%;width:78px;height:78px;background:#ffffff32;color:white;font-size:35px;box-shadow:inset 0 0 0 8px #ffffff15;cursor:pointer}
+.mic.listening{background:#ffffff5c;animation:micpulse 1.2s infinite}
+@keyframes micpulse{50%{opacity:.55}}
+.hero h2{font-size:22px;margin:0 0 5px}
+.hero p{margin:0;color:#fffdfc;font-size:14px;line-height:1.4}
+.status{font-size:12px;margin-top:8px;opacity:.9}
+.sectionhead{display:flex;justify-content:space-between;align-items:center;margin:23px 4px 11px}
+.sectionhead h2{font-size:19px;margin:0}
+.small{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{background:var(--card);border:1px solid #ffffffb8;border-radius:23px;padding:16px;min-height:128px;box-shadow:0 5px 20px #5c9ab40b}
+.tile .label{font-size:14px;color:#59658b}
+.metric{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:6px}
+.metric strong{font-size:34px;letter-spacing:-1px}
+.metric small{font-size:15px;color:var(--muted)}
+.bubble{width:47px;height:47px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:#f0e8ff}
+.purple .bubble{background:#eee5ff}
+.green .bubble{background:#dff8ec}
+.coral .bubble{background:#ffebe7}
+.blue .bubble{background:#e1f5ff}
+.full{grid-column:1/-1}
+.panel{background:var(--card);border:1px solid #fff;border-radius:24px;padding:18px;box-shadow:0 5px 20px #5c9ab40b}
+.field{margin:12px 0}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;border:1px solid #dfe5f4;border-radius:13px;background:#fff;padding:11px 12px;font:inherit;color:var(--ink);outline-color:#a58cf9}
+.field textarea{min-height:80px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:0;border-radius:14px;padding:12px 15px;background:#edf0ff;color:var(--ink);font:600 14px system-ui;cursor:pointer}
+.btn.primary{background:linear-gradient(100deg,#8d6af4,#d56cdb);color:white}
+.btn.danger{background:#fff0ee;color:#b44c49}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.entry{padding:12px 0;border-bottom:1px solid #edf0f7}
+.entry:last-child{border-bottom:0}
+.entry strong{display:block}
+.entry p{margin:5px 0;font-size:13px;color:var(--muted);white-space:pre-wrap}
+.chart{display:flex;align-items:end;gap:8px;height:115px;margin-top:14px}
+.barcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:end}
+.bar{width:100%;max-width:32px;border-radius:9px 9px 4px 4px;background:linear-gradient(#8d6af4,#c7b5ff);min-height:3px}
+.barlabel{font-size:10px;color:var(--muted)}
+.barval{font-size:10px;color:var(--muted)}
+.nav{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);width:min(680px,calc(100% - 24px));background:#ffffffdf;backdrop-filter:blur(14px);border:1px solid #fff;border-radius:25px;display:flex;justify-content:space-around;padding:9px 5px calc(9px + env(safe-area-inset-bottom));box-shadow:0 8px 28px #44557820}
+.nav button{border:0;background:transparent;color:var(--muted);font:12px system-ui;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px;cursor:pointer}
+.nav button span{font-size:22px}
+.nav button.active{color:#188f7e;font-weight:700}
+.page{display:none}
+.page.active{display:block}
+.notice{font-size:12px;color:#68769c;line-height:1.5;margin:12px 4px}
+.pill{display:inline-block;border-radius:99px;padding:5px 9px;background:#e6f8ef;color:#16865c;font-size:11px;font-weight:650}
+.empty{font-size:13px;color:var(--muted);padding:12px 0}
+.toast{font-size:12px;color:#16865c;margin-top:8px;min-height:16px}
+@media(max-width:380px){body{padding:14px 12px 100px}.hero{padding:17px}.mic{width:65px;height:65px}.hero h2{font-size:19px}.metric strong{font-size:29px}.tile{padding:13px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header class="top"><div><div class="eyebrow" id="dateLabel">MON JOURNAL PERSONNEL</div><h1>Bonjour 👋<br><span style="font-size:20px;font-weight:600">Prenons de vos nouvelles</span></h1></div><div class="avatar">🌿</div></header>
+
+<section id="home" class="page active">
+<div class="hero"><button class="mic" id="micBtn" aria-label="Dicter">🎙️</button><div><h2>Raconter ma journée</h2><p>Parlez naturellement.<br>Je prépare votre journal.</p><div class="status" id="voiceStatus">Appuyez pour commencer la dictée</div></div></div>
+
+<div class="sectionhead"><h2>Aujourd'hui</h2><span class="small" id="todayDate"></span></div>
+<div class="grid">
+<div class="tile purple"><div class="label">🌙 Sommeil</div><div class="metric"><strong id="sleepVal">—<small>/10</small></strong><div class="bubble">☾</div></div></div>
+<div class="tile green"><div class="label">⚡ Énergie</div><div class="metric"><strong id="energyVal">—<small>/10</small></strong><div class="bubble">ϟ</div></div></div>
+<div class="tile coral"><div class="label">💗 Douleurs</div><div class="metric"><strong id="painVal">—<small>/10</small></strong><div class="bubble">♡</div></div></div>
+<div class="tile blue"><div class="label">🚶 Activité</div><div class="metric"><strong id="activityVal">—<small>min</small></strong><div class="bubble">↗</div></div></div>
+<div class="panel full"><div class="sectionhead" style="margin:0 0 7px"><h2>Mon résumé du jour</h2><span class="pill" id="savedPill">À compléter</span></div><div id="todaySummary" class="empty">Rien d'enregistré pour aujourd'hui. Vous pouvez dicter ou saisir vos informations.</div><button class="btn primary" style="width:100%;margin-top:10px" onclick="showPage('journal')">✎ Vérifier / modifier mon journal</button></div>
+<div class="panel full"><div class="sectionhead" style="margin:0"><h2>Mon évolution</h2><span class="small">7 derniers jours</span></div><div id="chart" class="chart"></div><div class="small">Score d'énergie lorsqu'il est renseigné</div></div>
+</div>
+<p class="notice">🔒 Prototype de test : les entrées restent dans le stockage local de ce navigateur. Ce n'est pas encore un dossier médical sécurisé ni un outil de diagnostic. Faites une sauvegarde régulière.</p>
+</section>
+
+<section id="journal" class="page">
+<div class="sectionhead"><h2>Mon journal</h2><span class="small">À vérifier avant sauvegarde</span></div>
+<div class="panel">
+<div class="field"><label for="spoken">Votre récit (dictée ou texte)</label><textarea id="spoken" placeholder="Ex. : J'ai dormi 7 heures, sommeil 7 sur 10. Énergie 5 sur 10. J'ai marché 20 minutes. Douleurs 3 sur 10. J'ai pris mon traitement habituel…"></textarea></div>
+<div class="actions"><button class="btn" id="parseBtn">✨ Préparer les rubriques</button><button class="btn" id="micInline">🎙️ Dicter / Arrêter</button></div>
+<div class="field"><label for="entryDate">Date du journal</label><input id="entryDate" type="date"></div>
+<div class="two">
+<div class="field"><label for="sleep">Sommeil (0–10)</label><input id="sleep" type="number" min="0" max="10" step="1" placeholder="Non renseigné"></div>
+<div class="field"><label for="hours">Durée de sommeil (heures)</label><input id="hours" type="number" min="0" max="24" step="0.25" placeholder="Non renseignée"></div>
+<div class="field"><label for="energy">Énergie (0–10)</label><input id="energy" type="number" min="0" max="10" step="1" placeholder="Non renseignée"></div>
+<div class="field"><label for="pain">Douleurs (0–10)</label><input id="pain" type="number" min="0" max="10" step="1" placeholder="Non renseignées"></div>
+<div class="field"><label for="activity">Activité (minutes)</label><input id="activity" type="number" min="0" max="1440" step="1" placeholder="Non renseignée"></div>
+<div class="field"><label for="meals">Repas / boissons</label><input id="meals" placeholder="Non renseignés"></div>
+</div>
+<div class="field"><label for="symptoms">Symptômes / ressentis</label><textarea id="symptoms" placeholder="Ce que vous avez ressenti…"></textarea></div>
+<div class="field"><label for="treatments">Traitements / compléments</label><textarea id="treatments" placeholder="Nom, dose, heure, changement…"></textarea></div>
+<div class="field"><label for="notes">Notes libres / questions pour le médecin</label><textarea id="notes" placeholder="Événements, déclencheurs possibles, questions…"></textarea></div>
+<div class="actions"><button class="btn primary" id="saveBtn">Enregistrer cette journée</button><button class="btn" id="clearBtn">Effacer le formulaire</button></div>
+<div id="saveMsg" class="toast"></div>
+</div>
+</section>
+
+<section id="trends" class="page">
+<div class="sectionhead"><h2>Tendances</h2><span class="small">Vos données saisies</span></div>
+<div class="panel"><h3 style="margin:0 0 6px">Énergie sur les 7 derniers jours</h3><div id="trendChart" class="chart"></div><div id="trendText" class="empty">Enregistrez plusieurs journées pour voir une tendance.</div></div>
+<div class="panel" style="margin-top:12px"><h3 style="margin-top:0">Historique récent</h3><div id="history"></div>
+<div class="actions"><button class="btn" id="exportBtn">Exporter mes données (JSON)</button><button class="btn danger" id="deleteBtn">Supprimer toutes les données</button></div><div id="dataMsg" class="toast"></div></div>
+</section>
+
+<section id="doctor" class="page">
+<div class="sectionhead"><h2>Préparer un rendez-vous</h2></div>
+<div class="panel">
+<p style="font-size:14px;line-height:1.5;margin-top:0">Créez un résumé à relire et à compléter avant votre consultation. Il reprend vos journaux enregistrés, sans poser de diagnostic.</p>
+<div class="field"><label for="period">Période du résumé</label><select id="period"><option value="7">7 derniers jours</option><option value="30">30 derniers jours</option><option value="90">90 derniers jours</option><option value="all">Tout l'historique</option></select></div>
+<div class="field"><label for="doctorQuestions">Questions que je souhaite poser</label><textarea id="doctorQuestions" placeholder="Qu'aimerais-je comprendre ou demander ?"></textarea></div>
+<button class="btn primary" id="summaryBtn">Préparer le résumé</button>
+<div class="field"><label for="doctorSummary">Résumé à relire</label><textarea id="doctorSummary" style="min-height:220px" placeholder="Votre résumé apparaîtra ici…"></textarea></div>
+<button class="btn" id="copySummary">Sélectionner le résumé</button>
+</div>
+</section>
+
+<section id="settings" class="page">
+<div class="sectionhead"><h2>Mes données</h2></div>
+<div class="panel">
+<h3>Confidentialité</h3>
+<p style="font-size:14px;line-height:1.5">Cette première version enregistre les journaux dans le navigateur de cet appareil. Elle n'a pas de compte utilisateur, de synchronisation ni de sauvegarde en ligne. Effacer les données du navigateur peut les supprimer : exportez régulièrement une copie JSON.</p>
+<p style="font-size:14px;line-height:1.5">La dictée utilise la reconnaissance vocale disponible dans le navigateur, qui peut dépendre d'un service externe et d'une connexion Internet. Évitez d'y dicter des informations que vous ne souhaitez pas transmettre à ce service.</p>
+<div class="actions"><button class="btn" id="exportBtn2">Exporter mes données (JSON)</button></div>
+</div>
+</section>
+</main>
+
+<nav class="nav">
+<button class="active" data-page="home"><span>⌂</span>Accueil</button>
+<button data-page="journal"><span>▤</span>Journal</button>
+<button data-page="trends"><span>▥</span>Tendances</button>
+<button data-page="doctor"><span>♡</span>Rendez-vous</button>
+<button data-page="settings"><span>⚙</span>Données</button>
+</nav>
+
+<script>
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toLocaleDateString('en-CA');
+let entries=loadEntries();
+let recognition=null,listening=false,prevText='';
+
+function loadEntries(){try{return JSON.parse(localStorage.getItem('journalSanteV1')||'{}')}catch{return {}}}
+function persist(){localStorage.setItem('journalSanteV1',JSON.stringify(entries))}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='trends')renderHistory();window.scrollTo({top:0,behavior:'smooth'})}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+
+function val(id){const v=$(id).value;return v===''?null:Number.isNaN(Number(v))?v:v}
+function currentForm(){return {date:$('entryDate').value||today(),sleep:val('sleep'),hours:val('hours'),energy:val('energy'),pain:val('pain'),activity:val('activity'),meals:$('meals').value.trim(),symptoms:$('symptoms').value.trim(),treatments:$('treatments').value.trim(),notes:$('notes').value.trim(),transcript:$('spoken').value.trim(),updatedAt:new Date().toISOString()}}
+function fillForm(e){$('entryDate').value=e?.date||today();['sleep','hours','energy','pain','activity'].forEach(k=>$(k).value=e?.[k]??'');['meals','symptoms','treatments','notes','transcript'].forEach(k=>$(k==='transcript'?'spoken':k).value=e?.[k]||'');$('saveMsg').textContent=''}
+function saveEntry(){let e=currentForm();if(!e.date)return;$('saveMsg').textContent='';entries[e.date]=e;persist();render();$('saveMsg').textContent='Journée enregistrée sur cet appareil ✓';$('savedPill').textContent='Enregistré'}
+
+const WORD_NUMS={' zéro ':' 0 ',' zero ':' 0 ',' un ':' 1 ',' une ':' 1 ',' deux ':' 2 ',' trois ':' 3 ',' quatre ':' 4 ',' cinq ':' 5 ',' six ':' 6 ',' sept ':' 7 ',' huit ':' 8 ',' neuf ':' 9 ',' dix ':' 10 '};
+function normalizeSpeech(t){let n=' '+t.toLocaleLowerCase('fr-FR').replace(/(\d)\s*\/\s*(10)/g,'$1 sur $2')+' ';for(const[w,v]of Object.entries(WORD_NUMS))n=n.split(w).join(v);return n}
+
+function parseSpeech(){
+let t=$('spoken').value;if(!t.trim())return;
+const n=normalizeSpeech(t);
+function find(pattern){let m=n.match(pattern);return m?Number(m[1].replace(',','.')):null}
+const s=find(/sommeil\s*(?:de|à|a|:)?\s*(\d{1,2})(?:\s*(?:sur\s*10|\/\s*10))?/)||find(/dormi\s*(\d+(?:[,.]\d+)?)\s*(?:heures?|h\b)/);
+if(s!==null){if(/sommeil/.test(n))$('sleep').value=Math.min(10,s);else $('hours').value=Math.min(24,s)}
+const en=find(/(?:énergie|energie)\s*(?:de|à|a|:)?\s*(\d{1,2})(?:\s*(?:sur\s*10|\/\s*10))?/);
+if(en!==null&&en<=10)$('energy').value=en;
+const pa=find(/(?:douleurs?|douleur|mal)\s*(?:de|à|a|:)?\s*(\d{1,2})(?:\s*(?:sur\s*10|\/\s*10))?/);
+if(pa!==null&&pa<=10)$('pain').value=pa;
+let ac=find(/(?:marché|marche|activité|activite|exercice|vélo|velo|natation)\D{0,18}(\d{1,3})\s*(?:minutes?|min\b)/)||find(/(\d{1,3})\s*(?:minutes?|min\b)\D{0,12}(?:de marche|à pied|de vélo|de velo|d'activité)/);
+if(ac!==null)$('activity').value=Math.min(1440,ac);
+let meal=[];['petit-déjeuner','déjeuner','dîner','repas','mangé','mange','bu'].forEach(w=>{if(n.includes(w))meal.push(w)});
+if(meal.length&&!$('meals').value)$('meals').value=t;
+let symptoms=[];['fatigue','épuisé','épuisée','douleur','vertige','nausée','stress','essoufflement','palpitations','maux de tête'].forEach(w=>{if(n.includes(w))symptoms.push(w)});
+if(symptoms.length&&!$('symptoms').value)$('symptoms').value='À vérifier dans le récit : '+symptoms.join(', ')+'.';
+$('saveMsg').textContent='Rubriques préremplies quand une valeur a été reconnue. Vérifiez chaque champ : le classement automatique est simple et peut se tromper.';
+}
+
+function stopVoice(finished){
+if(recognition){try{recognition.stop()}catch{}recognition=null}
+listening=false;
+$('micBtn').classList.remove('listening');
+$('voiceStatus').textContent=finished?'Dictée terminée. Vérifiez le texte puis préparez les rubriques.':'Dictée arrêtée.';
+}
+function startVoice(){
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){$('voiceStatus').textContent='Dictée non disponible ici. Utilisez le clavier vocal du téléphone.';$('spoken').focus();return}
+if(listening){stopVoice(true);showPage('journal');parseSpeech();return}
+showPage('journal');
+listening=true;
+prevText=$('spoken').value?$('spoken').value+' ':'';
+recognition=new SR();
+recognition.lang='fr-FR';recognition.interimResults=true;recognition.continuous=true;recognition.maxAlternatives=1;
+$('micBtn').classList.add('listening');
+$('voiceStatus').textContent='🔴 Je vous écoute… Parlez tranquillement, puis appuyez de nouveau sur le micro pour terminer.';
+recognition.onresult=e=>{let text='';for(let i=0;i<e.results.length;i++)text+=e.results[i][0].transcript+' ';$('spoken').value=(prevText+text).trim()};
+recognition.onerror=e=>{if(e.error==='no-speech'||e.error==='aborted')return;if(e.error==='not-allowed'){stopVoice(false);$('voiceStatus').textContent='Autorisez le micro dans le navigateur.'}else{$('voiceStatus').textContent='Dictée interrompue : '+e.error}};
+recognition.onend=()=>{if(listening){try{recognition.start()}catch{stopVoice(true);parseSpeech()}return}parseSpeech()};
+try{recognition.start()}catch{$('voiceStatus').textContent='Impossible de démarrer la dictée. Réessayez.';listening=false}
+}
+
+$('micBtn').onclick=startVoice;
+$('micInline').onclick=startVoice;
+$('parseBtn').onclick=parseSpeech;
+$('saveBtn').onclick=saveEntry;
+$('clearBtn').onclick=()=>{fillForm(null);$('saveMsg').textContent='Formulaire effacé.'};
+
+function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}
+function render(){const e=entries[today()];
+$('dateLabel').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}).toUpperCase();
+$('todayDate').textContent=fmtDate(today());
+['sleep','energy','pain','activity'].forEach(k=>$(k+'Val').innerHTML=e?.[k]!=null?`${e[k]}<small>${k==='activity'?' min':'/10'}</small>`:`—<small>${k==='activity'?' min':'/10'}</small>`);
+$('todaySummary').textContent=e?summaryLine(e):'Rien d'enregistré pour aujourd'hui. Vous pouvez dicter ou saisir vos informations.';
+$('savedPill').textContent=e?'Enregistré':'À compléter';
+renderChart();}
+
+function summaryLine(e){return [['Sommeil',e.sleep!=null?e.sleep+'/10':null],['Durée',e.hours!=null?e.hours+' h':null],['Énergie',e.energy!=null?e.energy+'/10':null],['Douleurs',e.pain!=null?e.pain+'/10':null],['Activité',e.activity!=null?e.activity+' min':null],['Repas',e.meals],['Symptômes',e.symptoms],['Traitements',e.treatments],['Notes',e.notes]].filter(x=>x[1]).map(x=>x[0]+' : '+x[1]).join('\n')}
+
+function renderChart(){const dates=Array.from({length:7},(_,i)=>{let d=new Date();d.setDate(d.getDate()-(6-i));return d.toLocaleDateString('en-CA')});
+$('chart').innerHTML=dates.map(d=>{let e=entries[d],v=e?.energy;return `<div class="barcol"><span class="barval">${v??'–'}</span><div class="bar" style="height:${v==null?3:Math.max(5,v*8)}%;opacity:${v==null?.2:1}"></div><span class="barlabel">${new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short'}).replace('.','')}</span></div>`}).join('')}
+
+function renderHistory(){const all=Object.values(entries).sort((a,b)=>b.date.localeCompare(a.date));
+$('history').innerHTML=all.length?all.slice(0,30).map(e=>`<div class="entry"><strong>${fmtDate(e.date)}</strong><p>${[['Sommeil',e.sleep],['Énergie',e.energy],['Douleurs',e.pain],['Activité (min)',e.activity]].filter(x=>x[1]!=null).map(x=>x[0]+' '+x[1]).join(' · ')||'Pas de scores'}${e.symptoms?'\n'+escapeHtml(e.symptoms):''}</p><button class="btn" data-edit="${e.date}">Ouvrir / modifier</button></div>`).join(''):'<div class="empty">Aucune journée enregistrée pour le moment.</div>';
+document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{fillForm(entries[b.dataset.edit]);showPage('journal')});
+const last=all.slice(0,7).filter(e=>e.energy!=null);
+$('trendText').textContent=last.length?`Énergie moyenne des journées renseignées : ${(last.reduce((a,e)=>a+e.energy,0)/last.length).toFixed(1).replace('.',',')}/10 (${last.length} journée(s)). Cela décrit les données saisies, sans établir de cause.`:'Enregistrez plusieurs journées pour voir une tendance.';
+$('trendChart').innerHTML=all.slice(0,7).reverse().map(e=>`<div class="barcol"><span class="barval">${e.energy??'–'}</span><div class="bar" style="height:${e.energy==null?3:Math.max(5,e.energy*8)}%;opacity:${e.energy==null?.2:1}"></div><span class="barlabel">${fmtDate(e.date)}</span></div>`).join('')}
+
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+$('exportBtn').onclick=$('exportBtn2').onclick=()=>{const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),entries},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='journal-sante-'+today()+'.json';a.click();URL.revokeObjectURL(a.href);$('dataMsg').textContent='Export préparé.'};
+$('deleteBtn').onclick=()=>{if(confirm('Supprimer définitivement tous les journaux enregistrés dans ce navigateur ? Exportez une copie avant si nécessaire.')){entries={};persist();render();renderHistory();$('dataMsg').textContent='Données supprimées.'}};
+
+$('summaryBtn').onclick=()=>{let days=$('period').value,cut=new Date();if(days!=='all')cut.setDate(cut.getDate()-Number(days));
+let list=Object.values(entries).filter(e=>days==='all'||new Date(e.date+'T23:59:00')>=cut).sort((a,b)=>a.date.localeCompare(b.date));
+let lines=['RÉSUMÉ PERSONNEL POUR CONSULTATION','Période : '+(list.length?fmtDate(list[0].date)+' – '+fmtDate(list[list.length-1].date):'aucune donnée'),'',`Journées enregistrées : ${list.length}`];
+for(let k of ['sleep','hours','energy','pain','activity']){let a=list.filter(e=>e[k]!=null).map(e=>e[k]);lines.push(({sleep:'Sommeil (/10)',hours:'Durée de sommeil (h)',energy:'Énergie (/10)',pain:'Douleurs (/10)',activity:'Activité (min)'}[k])+': '+(a.length?`moyenne ${+(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1)} sur ${a.length} valeur(s)`:'non renseigné'))}
+lines.push('','SYMPTÔMES, REPAS, TRAITEMENTS ET NOTES');
+list.forEach(e=>{let s=summaryLine(e);if(s)lines.push('\n'+fmtDate(e.date)+'\n'+s)});
+lines.push('','QUESTIONS POUR LE MÉDECIN',$('doctorQuestions').value||'À compléter.','','Ce résumé reprend les données saisies et n'est pas une interprétation médicale.');
+$('doctorSummary').value=lines.join('\n')};
+$('copySummary').onclick=()=>{$('doctorSummary').focus();$('doctorSummary').select();$('dataMsg').textContent='Résumé sélectionné : utilisez Copier dans le menu du téléphone.'};
+
+$('entryDate').value=today();
+fillForm(entries[today()]||null);
+render();
+if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
